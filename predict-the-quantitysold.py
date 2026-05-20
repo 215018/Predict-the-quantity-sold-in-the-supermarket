@@ -171,23 +171,24 @@ model2 = RandomForestRegressor(
 )
 
 model2.fit(x_train, y_train)
-y_pred = model2.predict(x_val)
-mse = mean_squared_error(y_val, y_pred)
-r2 = r2_score(y_val, y_pred)
-print("Mean Squared Error (Random Forest):", mse)
-print("R^2 Score (Random Forest):", r2)
-#The Random Forest model achieved lower MSE, indicating better predictive performance.
 
-#Predict Quantity_Sold_(kilo) for unlabeled dataset
-# %%
-test_predictions = model2.predict(unlabeled_df)
-#Create a submission file with the predicted values for the Quantity_Sold_(kilo) column.
-submission = pd.DataFrame({
-    "ID": unlabeled_ids,
-    "Quantity_Sold_(kilo)": test_predictions
-})
+# ── Results ──────────────────────────────────────────
+y_train_pred = model2.predict(x_train)
+train_r2  = r2_score(y_train, y_train_pred)
+train_mse = mean_squared_error(y_train, y_train_pred)
 
-submission.to_csv("submission.csv", index=False)
+y_pred   = model2.predict(x_val)
+val_r2   = r2_score(y_val, y_pred)
+val_mse  = mean_squared_error(y_val, y_pred)
 
-print("submission.csv created successfully")
-# %%
+baseline_mse = mean_squared_error(y_val, np.full(len(y_val), y_train.mean()))
+
+print("=== Results ===")
+print(f"Baseline MSE : {baseline_mse:.4f}")
+print(f"Train R²     : {train_r2:.4f}  |  Train MSE : {train_mse:.4f}")
+print(f"Val R²       : {val_r2:.4f}  |  Val MSE   : {val_mse:.4f}")
+
+importances = pd.Series(model2.feature_importances_, index=x_train.columns)
+print("\n=== Top 10 Features ===")
+print(importances.sort_values(ascending=False).head(10))
+# ─────────────────────────────────────────────────────
