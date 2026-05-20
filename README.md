@@ -1,71 +1,67 @@
 # Predict Quantity Sold
 
-This project predicts the `Quantity_Sold_(kilo)` value for supermarket sales data using a machine learning pipeline.
+Predicts `Quantity_Sold_(kilo)` for supermarket sales data using a machine learning pipeline.
 
-## Project Files
+## Problem
+Supermarkets need to forecast how much of each product will sell to manage 
+inventory and reduce waste. This project builds a regression model to predict 
+the quantity sold (in kilograms) based on pricing, product, and time features.
 
-- `predict-the-quantitysold.py` - Main Python script that loads data, preprocesses it, trains models, evaluates performance, and generates predictions.
-- `labeled_data.csv` - Labeled dataset containing features and the target `Quantity_Sold_(kilo)`.
-- `unlabeled_data.csv` - Dataset without target values, used for final predictions.
-- `pyproject.toml` / `uv.lock` - Project metadata and dependency lock file for `uv`.
+## Data
+- `labeled_data.csv` — historical sales with known quantities
+- `unlabeled_data.csv` — sales records without quantities (for final prediction)
 
-## What it does
+Key features: item name, category, unit selling price, wholesale price, 
+loss rate, weekday.
 
-The script:
+## Approach
 
-1. Loads labeled and unlabeled CSV data.
-2. Cleans and preprocesses features.
-3. Creates new features like price difference, profit ratio, and loss-adjusted margin.
-4. Encodes categorical values.
-5. Trains Linear Regression and Random Forest regression models.
-6. Evaluates model performance on validation data.
-7. Predicts `Quantity_Sold_(kilo)` for the unlabeled dataset and exports `submission1.csv`.
+**Preprocessing**
+- Removed negative prices using absolute value
+- Filtered out rows with negative target values
+- Filled missing wholesale prices with training set mean
+
+**Feature Engineering**
+- Price Difference: selling price minus wholesale price
+- Profit Ratio: selling price divided by wholesale price
+- Loss Adjusted Margin: effective margin after accounting for spoilage
+
+**Encoding**
+- Item name and category: target encoding (replaced with mean quantity sold per category)
+- Weekday: one-hot encoding
+
+**Models Trained**
+- Linear Regression (baseline comparison)
+- Random Forest Regressor (final model)
+
+## Results
+
+| Model | Val R² | Val MSE | Baseline MSE |
+|-------|--------|---------|--------------|
+| Linear Regression | — | — | 165.11 |
+| Random Forest | 0.61 | 63.80 | 165.11 |
+
+- Train R²: 0.80 vs Val R²: 0.61 — mild overfitting present
+- Model significantly outperforms naive baseline (predict mean)
+- Most predictive feature: Item identity (0.36 importance score)
+
+## What I'd Improve Next
+- Reduce overfitting: lower max_depth, tune with cross-validation 
+  instead of a single split
+- Replace mean imputation for wholesale price with a more principled 
+  approach — check if missingness is systematic
+- Target encoding without CV folds risks subtle data leakage — 
+  use category_encoders with proper pipeline next time
+- Investigate and act on outliers instead of just plotting them
+- Try log-transforming the target to handle skewed distribution
 
 ## Setup
 
-### Using `uv`
-
-From the project root:
-
 ```bash
-cd /Users/emilyjoy/Documents/Predict
-uv sync
+git clone https://github.com/215018/Predict-the-quantity-sold-in-the-supermarket
+cd Predict-the-quantity-sold-in-the-supermarket
+python predict-the-quantitysold.py
 ```
-
-### Alternative: pip
-
-If you are not using `uv`:
-
-```bash
-/usr/local/bin/python3 -m pip install -r requirements.txt
-```
-
-## Run the script
-
-### Run normally
-
-```bash
-cd /Users/emilyjoy/Documents/Predict
-/usr/local/bin/python3 predict-the-quantitysold.py
-```
-
-### Run with `uv`
-
-```bash
-cd /Users/emilyjoy/Documents/Predict
-uv run python predict-the-quantitysold.py
-```
-
-## Run interactively in VS Code
-
-1. Open `predict-the-quantitysold.py` in VS Code.
-2. Use the `# %%` cell markers to run cells in the Interactive Window.
-3. Make sure the VS Code kernel/interpreter is the `uv` environment or the Python interpreter that has `pandas`, `numpy`, and `scikit-learn` installed.
-
-## Notes
-
-- Do not try to import the script itself with a package-style name like `import predict-the-quantitysold`. Python module names cannot contain `-`.
-- If you want to make this a reusable package, create a proper package folder and update `pyproject.toml` accordingly.
 
 ## Output
-- `submission.csv` - Generated predictions for the unlabeled data.
+`submission.csv` — predicted quantities for the unlabeled dataset
